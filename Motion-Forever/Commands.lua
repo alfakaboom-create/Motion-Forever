@@ -1,0 +1,79 @@
+-- Commands: /mforever (or /motionforever)
+
+local _, ns = ...
+
+local function onOff(value)
+	return value and "|cff00ff00on|r" or "|cffff0000off|r"
+end
+
+local function printHelp()
+	ns.Print("v" .. ns.VERSION .. " commands:")
+	print("  /mforever list - guild members currently tracked")
+	print("  /mforever share on|off - send your position to the guild")
+	print("  /mforever show on|off - show guild members on your map")
+	print("  /mforever ping - ask everyone to send their position now")
+	print("  /mforever status - current settings")
+	print("  /mforever debug on|off - extra chat output for testing")
+end
+
+local function printList()
+	local names = ns.Roster:SortedNames()
+	if #names == 0 then
+		ns.Print("No guild members with Motion-Forever seen yet.")
+		return
+	end
+	ns.Print(#names .. " guild member(s) tracked:")
+	local now = GetTime()
+	for _, name in ipairs(names) do
+		local entry = ns.Roster:Get(name)
+		local zone = ns.Compat.GetMapName(entry.mapID) or "unknown zone"
+		local where
+		if entry.x then
+			where = string.format("%s (%.1f, %.1f)", zone, entry.x * 100, entry.y * 100)
+		else
+			where = zone .. " (no exact position)"
+		end
+		print(string.format("  %s - %s, %ds ago", Ambiguate(name, "guild"), where, math.floor(now - entry.lastSeen)))
+	end
+end
+
+local function printStatus()
+	ns.Print("Sharing: " .. onOff(ns.db.share) .. ", showing: " .. onOff(ns.db.show)
+		.. ", debug: " .. onOff(ns.db.debug))
+	ns.Print("In guild: " .. tostring(IsInGuild()) .. ", tracked: " .. ns.Roster:Count())
+	local mapID, x, y = ns.Compat.GetPlayerMapPosition()
+	if mapID then
+		ns.Print(string.format("Your map: %s (%d), position: %s", ns.Compat.GetMapName(mapID) or "?", mapID,
+			x and string.format("%.1f, %.1f", x * 100, y * 100) or "hidden"))
+	else
+		ns.Print("Your map: unknown")
+	end
+end
+
+SLASH_MOTIONFOREVER1 = "/mforever"
+SLASH_MOTIONFOREVER2 = "/motionforever"
+
+SlashCmdList.MOTIONFOREVER = function(input)
+	local cmd, arg = (input or ""):lower():match("^%s*(%S*)%s*(%S*)")
+
+	if cmd == "list" then
+		printList()
+	elseif cmd == "share" and (arg == "on" or arg == "off") then
+		ns.Position:SetSharing(arg == "on")
+		ns.Print("Sharing your position: " .. onOff(ns.db.share))
+	elseif cmd == "show" and (arg == "on" or arg == "off") then
+		ns.SetOption("show", arg == "on")
+		ns.Print("Showing guild members on the map: " .. onOff(ns.db.show))
+	elseif cmd == "ping" then
+		ns.Comm:Broadcast(ns.Protocol.MSG.HELLO)
+		ns.Position:RequestSoon()
+		ns.Print("Asked the guild for positions.")
+	elseif cmd == "status" then
+		printStatus()
+	elseif cmd == "debug" and (arg == "on" or arg == "off") then
+		ns.SetOption("debug", arg == "on")
+		ns.Print("Debug: " .. onOff(ns.db.debug))
+	else
+		printHelp()
+	end
+end

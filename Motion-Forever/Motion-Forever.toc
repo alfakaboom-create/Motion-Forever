@@ -1,0 +1,16 @@
+## Interface: 120000, 120001, 120005
+## Title: Motion-Forever
+## Notes: Shows guild members who also run Motion-Forever on your world map.
+## Version: 0.1.0
+## SavedVariables: MotionForeverDB
+
+# Load order matters: Core first, the pin mixin (MapPins.lua) before its XML.
+Core.lua
+Protocol.lua
+Roster.lua
+Compat.lua
+Comm.lua
+Position.lua
+MapPins.lua
+MapPins.xml
+Commands.lua
