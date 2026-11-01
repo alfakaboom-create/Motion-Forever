@@ -156,19 +156,13 @@ lua tests/run.lua
 
 # Launch checklist
 
-Things that can only be confirmed once the WoW Forever client is out:
+The full step-by-step test list is in
+[docs/LAUNCH-TESTING.md](docs/LAUNCH-TESTING.md).
 
-- [ ] **Interface number.** The `.toc` uses `16001`, based on the installed
+Already done:
+
+- [x] **Addon folder path.** `_forever_\Interface\AddOns`, linked with `link-addon.ps1`.
+- [x] **Interface number.** The `.toc` uses `16001`, from the installed
       client (version 1.60.1). If the game lists the addon as out of date
       after a patch, run `/run print(select(4, GetBuildInfo()))` in game
       and put that number in `## Interface:`.
-- [x] **Addon folder path.** `_forever_\Interface\AddOns`, linked with `link-addon.ps1`.
-- [ ] **Messages get through.** With a second character in the same guild,
-      run `/mforever debug on`, then `/mforever ping`. Each should show up in
-      the other's `/mforever list`.
-- [ ] **Your position can be read.** `/mforever status` should show
-      coordinates in the open world.
-- [ ] **Dots appear on the world map**, on both the zone and continent maps.
-- [ ] **Behavior in dungeons and combat.** Midnight added restrictions for
-      addons. Check what still works.
-- [ ] If anything fails, start with `Compat.lua`.
