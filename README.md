@@ -84,6 +84,7 @@ Motion-Forever/             <- repo root
 │  ├─ GuildListData.lua     guild list rows and sorting (unit tested)
 │  ├─ GuildListUI.lua       the guild list window
 │  └─ Commands.lua          /mforever
+├─ CLAUDE.md                project notes Claude Code reads automatically
 ├─ tests/run.lua            unit tests, run outside the game
 ├─ scripts/
 │  ├─ link-addon.ps1        links the addon into your WoW folder
