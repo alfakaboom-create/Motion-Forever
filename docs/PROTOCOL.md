@@ -43,13 +43,16 @@ Example: `1;POS;1429;4512;6230;MAGE;12;` is a level 12 mage in Elwynn Forest
 
 These are sent by WHISPER, one to one, and only to players whose `caps`
 contain `Q`. The one exception is a guild-wide search: `QREQ` sent on the
-GUILD channel asks everyone at once. Each player with shareable quests then
-whispers a `QLIST` back after a random delay of up to about 5 seconds.
-Players with nothing to share stay silent.
+GUILD channel asks everyone at once. Each player with shareable quests near
+the searcher's level then whispers a `QLIST` back after a random delay: up to
+about 5 seconds in a small guild, up to about 20 seconds in a large one.
+Players with nothing to share stay silent, and a repeat guild `QREQ` from the
+same player within 60 seconds is ignored. See "Traffic safeguards" in
+[PHASE2.md](PHASE2.md).
 
 | Type | Fields (planned) | Meaning |
 |---|---|---|
-| `QREQ` | none | "Which quests can you share?" |
+| `QREQ` | `level` | "Which quests can you share?" `level` is the requester's level, so the replier can leave out quests far from it |
 | `QLIST` | `part;total;id:level:zone,...` | Quests I can share, split across several messages if it's too long for one |
 | `QASK` | `id,id,...` | "Please share these quests with me": one or more quests the requester ticked. The other player sees one popup to accept or decline. |
 | `QREPLY` | `id:status,...` | `status` per quest: `ok`, `declined`, `busy`, `ineligible` or `failed` |

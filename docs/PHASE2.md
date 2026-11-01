@@ -166,14 +166,32 @@ and shows one combined list:
   people, each of them gets their own popup. You can only be in one party at
   a time, so the requests run one person after another.
 
-**How it works:** one `QREQ` goes to the guild channel. Everyone with
-shareable quests whispers a `QLIST` back, after a short random delay so the
-replies don't all arrive at once. Players with nothing to share don't reply.
+**How it works:** one `QREQ` goes out as a hidden addon message on the guild
+channel; players never see it in guild chat. It includes your level. Everyone
+with shareable quests near your level whispers a `QLIST` back, after a random
+delay so the replies don't all arrive at once. Players with nothing to share
+don't reply.
 
-**Limits to keep it from flooding:**
-- One guild search per minute.
-- Results kept for about a minute, so reopening the window doesn't search again.
-- In a large guild, results fill in over a few seconds instead of all at once.
+### Traffic safeguards
+
+One search is a short burst: 1 guild message, then about 3 whispered replies
+per guild member with quests to share. Only the person searching receives the
+replies, and no one sends more than the game allows at once. For comparison,
+it's less than one minute of phase 1's normal map traffic. These safeguards
+keep it that way:
+
+| Safeguard | Enforced by | Why |
+|---|---|---|
+| **Repliers ignore a repeat search** from the same person within 60 seconds | Every replying copy of the addon | Stops spam, even from a modified or broken addon. A limit only on the searcher's side wouldn't be enough |
+| **The search includes the searcher's level**, and repliers only send quests near it, roughly within 5 levels | Replier | Cuts most of the replies. A level 60's quests are no use to a level 10 |
+| **The reply delay grows with guild size**: up to about 5 seconds when few people run the addon, up to about 20 seconds for a large guild | Replier, based on how many addon users it knows are online | Spreads replies out so they don't arrive in one burst |
+| **One guild search at a time**, at most one per minute | Searcher | No overlapping searches |
+| **Results kept for about a minute** | Searcher | Reopening the window doesn't search again |
+
+In a large guild, results fill in over several seconds instead of all at
+once, and the window should show this ("Searching… 12 replies so far").
+
+The level range and delays above are starting values to tune after testing.
 
 ---
 
