@@ -42,7 +42,10 @@ Example: `1;POS;1429;4512;6230;MAGE;12;` is a level 12 mage in Elwynn Forest
 ## Phase 2 messages (reserved, not yet implemented)
 
 These are sent by WHISPER, one to one, and only to players whose `caps`
-contain `Q`.
+contain `Q`. The one exception is a guild-wide search: `QREQ` sent on the
+GUILD channel asks everyone at once. Each player with shareable quests then
+whispers a `QLIST` back after a random delay of up to about 5 seconds.
+Players with nothing to share stay silent.
 
 | Type | Fields (planned) | Meaning |
 |---|---|---|

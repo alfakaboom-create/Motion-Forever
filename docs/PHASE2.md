@@ -20,6 +20,17 @@ a quest request from a guild member's dot, and it uses the same messaging.
 > shown to them with the quest details (level, zone), and they use checkboxes
 > to request specific quests.
 
+### 3. Guild list window
+
+> A window listing everyone with the addon, their zone, and how many quests
+> they can share with you. It works without opening the map, and helps with
+> people who are in dungeons.
+
+### 4. Find quests I can get (whole guild)
+
+> Ask every guild member at once, and show one combined list grouped by who
+> has each quest.
+
 ---
 
 ## How it would work
@@ -62,7 +73,8 @@ These are whispers, so only the two people involved see them.
 
 | Step | Message | Contents |
 |---|---|---|
-| Ask for the list | `QREQ` | nothing |
+| Ask one person for their list | `QREQ` (whisper) | nothing |
+| Ask the whole guild (idea 4) | `QREQ` (guild) | nothing. Everyone with quests to share whispers back a `QLIST` |
 | Reply with the list | `QLIST` | part number, total parts, then each quest as `id:level:zone` |
 | Ask for chosen quests | `QASK` | the chosen quest IDs |
 | Answer | `QREPLY` | per quest: shared, declined, not eligible, or failed |
@@ -109,16 +121,84 @@ Phase 1 already reserves all four message types (see [PROTOCOL.md](PROTOCOL.md))
 
 ---
 
-## Suggestions to consider
+## Guild list window (idea 3)
 
-These are extra ideas from planning, not part of your list. Keep or drop
-them as you like.
+Opened with `/mforever` or a minimap button, so it works without the map.
 
-- **A guild list window** showing everyone with the addon, their zone, and
-  how many quests they can share with you. It would work without opening the
-  map, and is useful for people in dungeons.
-- **Find quests you can get:** ask every guild member at once and show one
-  combined list grouped by who has each quest.
+| Name | Level | Zone | Quests for you | |
+|---|---|---|---|---|
+| **Ann** (priest) | 12 | Westfall | 3 | [View] |
+| **Bob** (warrior) | 20 | The Deadmines (dungeon) | 1 | [View] |
+| **Cid** (mage) | 9 | Elwynn Forest | – | [View] |
+| *Dee* | 15 | Redridge Mountains | *no addon* | |
+
+- **Everyone with the addon is listed,** using what phase 1 already
+  tracks. That includes people in dungeons, who have no dot on the map.
+- **Guild members without the addon** can be shown greyed out, with their
+  zone from the guild roster. This shows who to ask to install it. It could
+  be a setting, since big guilds may find the list long.
+- **"Quests for you"** is filled in once their quest list has been fetched:
+  a number, or "–" if they have none for you.
+- **View** opens the same quest selection window as clicking their map dot.
+- **Sortable** by name, level or zone. Name colored by class.
+
+**Data:** mostly already exists in phase 1, so this window could be built
+first, even before the rest of phase 2.
+
+---
+
+## Find quests I can get (idea 4)
+
+A **Search guild** button, in the guild list window, asks everyone at once
+and shows one combined list:
+
+| ☐ | Quest | Level | Zone | Who has it |
+|---|---|---|---|---|
+| ☑ | The Fargodeep Mine | 7 | Elwynn Forest | Ann, Cid |
+| ☐ | The Defias Brotherhood | 14 | Westfall | Bob |
+
+- **Grouped by quest**, with everyone who can share it listed, so the same
+  quest appears only once.
+- **Picking who shares:** each requested quest goes to one person. Prefer
+  someone in the same zone as you, then someone not in a dungeon. You can
+  also pick a name yourself.
+- **Several sharers at once:** if the ticked quests come from different
+  people, each of them gets their own popup. You can only be in one party at
+  a time, so the requests run one person after another.
+
+**How it works:** one `QREQ` goes to the guild channel. Everyone with
+shareable quests whispers a `QLIST` back, after a short random delay so the
+replies don't all arrive at once. Players with nothing to share don't reply.
+
+**Limits to keep it from flooding:**
+- One guild search per minute.
+- Results kept for about a minute, so reopening the window doesn't search again.
+- In a large guild, results fill in over a few seconds instead of all at once.
+
+---
+
+## Caching quest lists
+
+Ideas 1, 3 and 4 all use the same lists, so each guild member's list is kept
+for about a minute after it's fetched. It's fetched again when:
+
+- the window is opened after that minute, or
+- you click **Refresh**.
+
+Each guild member's entry already has a `quests` slot reserved for this in
+phase 1.
+
+---
+
+## Suggested build order
+
+1. **Guild list window** (idea 3, without the quests column). It needs
+   almost nothing new and can be tested as soon as phase 1 works.
+2. **Quest lists between two people** (`QREQ` / `QLIST`), shown in the
+   map tooltip and the guild list.
+3. **Quest selection window** (idea 2).
+4. **Request and share flow** (idea 1): popup, invite, share, auto-accept.
+5. **Guild-wide search** (idea 4), reusing steps 2–4.
 
 ---
 
