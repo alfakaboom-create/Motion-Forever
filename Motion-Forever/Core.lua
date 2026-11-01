@@ -12,6 +12,11 @@ ns.defaults = {
 	minInterval = 3,   -- seconds between updates while moving
 	heartbeat = 15,    -- seconds between updates while standing still
 	debug = false,
+
+	-- Guild list window
+	listShowAll = true,     -- also list guild members without the addon
+	listSort = "name",      -- "name", "level" or "zone"
+	listAscending = true,
 }
 
 ---------------------------------------------------------------------------
@@ -24,6 +29,7 @@ ns.defaults = {
 --   SETTINGS_CHANGED(key)
 --   PIN_TOOLTIP(tooltip, entry) add lines to a map pin tooltip
 --   PIN_CLICK(entry, button)    a map pin was clicked
+--   GUILDLIST_ROW_CLICK(row, button)  a guild list row was clicked
 ---------------------------------------------------------------------------
 local listeners = {}
 

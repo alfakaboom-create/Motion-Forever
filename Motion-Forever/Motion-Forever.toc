@@ -13,4 +13,6 @@ Comm.lua
 Position.lua
 MapPins.lua
 MapPins.xml
+GuildListData.lua
+GuildListUI.lua
 Commands.lua

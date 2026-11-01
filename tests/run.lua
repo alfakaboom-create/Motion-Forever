@@ -39,8 +39,10 @@ load("Protocol.lua")
 load("Roster.lua")
 load("Comm.lua")
 load("Position.lua")
+load("GuildListData.lua")
 
 local P, Roster, Comm, Position = ns.Protocol, ns.Roster, ns.Comm, ns.Position
+local GuildList = ns.GuildList
 
 ---------------------------------------------------------------------------
 -- Tiny test runner
@@ -283,6 +285,83 @@ end)
 test("early send request wins", function()
 	eq(Position.ShouldSend(101, 100, here, here, settings, 101), true)
 	eq(Position.ShouldSend(101, 100, here, here, settings, 102), false)
+end)
+
+---------------------------------------------------------------------------
+-- Guild list
+---------------------------------------------------------------------------
+print("Guild list")
+
+local maps = { [1429] = "Elwynn Forest", [1436] = "Westfall", [291] = "The Deadmines" }
+local function listOpts(showAll)
+	return {
+		showAll = showAll,
+		selfName = "Me-TestRealm",
+		mapName = function(id) return maps[id] end,
+		isDungeon = function(id) return id == 291 end,
+	}
+end
+
+local function sampleAddonMembers()
+	return {
+		["Ann-TestRealm"] = { mapID = 1436, x = 0.5, y = 0.5, class = "PRIEST", level = 12 },
+		["Bob-TestRealm"] = { mapID = 291, class = "WARRIOR", level = 20 },
+		["Me-TestRealm"] = { mapID = 1429, x = 0.1, y = 0.1, class = "MAGE", level = 10 },
+	}
+end
+
+local sampleGuild = {
+	{ name = "Ann-TestRealm", level = 12, class = "PRIEST", zone = "Westfall" },
+	{ name = "Bob-TestRealm", level = 20, class = "WARRIOR", zone = "The Deadmines" },
+	{ name = "Dee-TestRealm", level = 15, class = "ROGUE", zone = "Redridge Mountains" },
+	{ name = "Me-TestRealm", level = 10, class = "MAGE", zone = "Elwynn Forest" },
+}
+
+local function byName(rows)
+	local out = {}
+	for _, row in ipairs(rows) do out[row.name] = row end
+	return out
+end
+
+test("lists addon users with zone, dungeon and position flags", function()
+	local rows = byName(GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(false)))
+	eq(rows["Ann-TestRealm"].zone, "Westfall")
+	eq(rows["Ann-TestRealm"].hasPosition, true)
+	eq(rows["Bob-TestRealm"].inDungeon, true)
+	eq(rows["Bob-TestRealm"].hasPosition, false)
+end)
+
+test("leaves yourself out", function()
+	local rows = byName(GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(true)))
+	eq(rows["Me-TestRealm"], nil)
+end)
+
+test("guild members without the addon only when showAll is on", function()
+	eq(byName(GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(false)))["Dee-TestRealm"], nil)
+	local dee = byName(GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(true)))["Dee-TestRealm"]
+	eq(dee.hasAddon, false); eq(dee.zone, "Redridge Mountains"); eq(dee.level, 15)
+end)
+
+test("fills gaps from the guild roster", function()
+	local members = { ["Cid-TestRealm"] = { mapID = 9999 } } -- unknown map, no class/level
+	local guild = { { name = "Cid-TestRealm", level = 9, class = "MAGE", zone = "Elwynn Forest" } }
+	local cid = GuildList.BuildRows(members, guild, listOpts(false))[1]
+	eq(cid.level, 9); eq(cid.class, "MAGE"); eq(cid.zone, "Elwynn Forest"); eq(cid.hasAddon, true)
+end)
+
+test("addon users come first, then sorted by the chosen column", function()
+	local rows = GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(true))
+	GuildList.SortRows(rows, "level", false)
+	eq(rows[1].name, "Bob-TestRealm"); eq(rows[2].name, "Ann-TestRealm"); eq(rows[3].name, "Dee-TestRealm")
+	GuildList.SortRows(rows, "zone", true)
+	eq(rows[1].name, "Bob-TestRealm", "The Deadmines before Westfall")
+	eq(rows[3].name, "Dee-TestRealm", "no-addon row stays last")
+end)
+
+test("counts addon users", function()
+	local rows = GuildList.BuildRows(sampleAddonMembers(), sampleGuild, listOpts(true))
+	local withAddon, total = GuildList.Count(rows)
+	eq(withAddon, 2); eq(total, 3)
 end)
 
 ---------------------------------------------------------------------------

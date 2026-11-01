@@ -8,7 +8,8 @@ end
 
 local function printHelp()
 	ns.Print("v" .. ns.VERSION .. " commands:")
-	print("  /mforever list - guild members currently tracked")
+	print("  /mforever - open or close the guild list window")
+	print("  /mforever list - guild members currently tracked, in chat")
 	print("  /mforever share on|off - send your position to the guild")
 	print("  /mforever show on|off - show guild members on your map")
 	print("  /mforever ping - ask everyone to send their position now")
@@ -56,7 +57,9 @@ SLASH_MOTIONFOREVER2 = "/motionforever"
 SlashCmdList.MOTIONFOREVER = function(input)
 	local cmd, arg = (input or ""):lower():match("^%s*(%S*)%s*(%S*)")
 
-	if cmd == "list" then
+	if cmd == "" then
+		ns.GuildList:Toggle()
+	elseif cmd == "list" then
 		printList()
 	elseif cmd == "share" and (arg == "on" or arg == "off") then
 		ns.Position:SetSharing(arg == "on")

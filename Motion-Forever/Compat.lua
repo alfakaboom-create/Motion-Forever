@@ -93,6 +93,46 @@ function Compat.TranslatePosition(fromMapID, x, y, toMapID)
 	return tx, ty
 end
 
+-- True for dungeon maps. Raids also count as dungeons here.
+function Compat.IsDungeonMap(mapID)
+	if not mapID then return false end
+	local info = C_Map.GetMapInfo(mapID)
+	return info ~= nil and Enum and Enum.UIMapType and info.mapType == Enum.UIMapType.Dungeon
+end
+
+---------------------------------------------------------------------------
+-- Guild roster
+---------------------------------------------------------------------------
+
+-- Asks the server for fresh guild roster data. GUILD_ROSTER_UPDATE fires
+-- when it arrives.
+function Compat.RequestGuildRoster()
+	if C_GuildInfo and C_GuildInfo.GuildRoster then
+		C_GuildInfo.GuildRoster()
+	elseif GuildRoster then
+		GuildRoster()
+	end
+end
+
+-- Returns online guild members as a list of { name, level, class, zone }.
+-- name is "Name-Realm"; class is the English class token, like "MAGE".
+function Compat.GetGuildMembers()
+	local members = {}
+	if not IsInGuild() then return members end
+
+	local total = GetNumGuildMembers() or 0
+	for i = 1, total do
+		local name, _, _, level, _, zone, _, _, isOnline, _, class = GetGuildRosterInfo(i)
+		if name and isOnline then
+			if not name:find("-", 1, true) then
+				name = name .. "-" .. (GetNormalizedRealmName() or "")
+			end
+			members[#members + 1] = { name = name, level = level, class = class, zone = zone }
+		end
+	end
+	return members
+end
+
 ---------------------------------------------------------------------------
 -- Colors
 ---------------------------------------------------------------------------

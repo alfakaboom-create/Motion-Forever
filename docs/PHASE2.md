@@ -210,8 +210,10 @@ phase 1.
 
 ## Suggested build order
 
-1. **Guild list window** (idea 3, without the quests column). It needs
-   almost nothing new and can be tested as soon as phase 1 works.
+1. ✅ **Guild list window** (idea 3, without the quests column). Built on the
+   `phase2-guild-list` branch, not yet tested in game. The Quests column and
+   View button are added in steps 2–3, through `GuildList.columns` and the
+   `GUILDLIST_ROW_CLICK` event.
 2. **Quest lists between two people** (`QREQ` / `QLIST`), shown in the
    map tooltip and the guild list.
 3. **Quest selection window** (idea 2).

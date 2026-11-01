@@ -25,6 +25,9 @@ Motion-Forever shares them itself:
 - [x] Tooltip on hover: name, level and zone
 - [x] Members in dungeons are still listed in `/mforever list`, without an exact position
 - [x] Option to stop sharing your position
+- [x] Guild list window (`/mforever`): everyone online with the addon, their
+      level, zone and status, sortable. It can also list guild members
+      without the addon
 - [ ] Minimap dots
 - [ ] Settings panel (only slash commands for now)
 - [ ] **Phase 2:** see which quests a guild member can share with you, pick the
@@ -34,7 +37,9 @@ Motion-Forever shares them itself:
 
 | Command | What it does |
 |---|---|
-| `/mforever list` | Lists tracked guild members with zone and position |
+| `/mforever` | Opens or closes the guild list window |
+| `/mforever list` | Lists tracked guild members with zone and position, in chat |
+| `/mforever help` | Lists all commands |
 | `/mforever share on\|off` | Turns sharing your position on or off |
 | `/mforever show on\|off` | Shows or hides guild members on your map |
 | `/mforever ping` | Asks everyone to send their position now |
@@ -54,6 +59,8 @@ Motion-Forever/             <- repo root
 │  ├─ Comm.lua              sending and receiving messages
 │  ├─ Position.lua          when to send your position
 │  ├─ MapPins.lua/.xml      the dots on the world map
+│  ├─ GuildListData.lua     guild list rows and sorting (unit tested)
+│  ├─ GuildListUI.lua       the guild list window
 │  └─ Commands.lua          /mforever
 ├─ tests/run.lua            unit tests, run outside the game
 ├─ scripts/                 link-addon.ps1 and package.ps1
