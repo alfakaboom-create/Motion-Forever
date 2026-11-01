@@ -196,7 +196,7 @@ A public repo shows the commit author email to anyone.
 # Launch testing
 
 The step-by-step checklist is in [docs/LAUNCH-TESTING.md](docs/LAUNCH-TESTING.md).
-It covers 49 checks across loading, your position, messages between two
+It covers 45 checks across loading, your position, messages between two
 players, map dots, the guild list window, settings, and situations like
 combat and dungeons.
 
