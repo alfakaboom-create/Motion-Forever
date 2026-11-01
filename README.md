@@ -103,11 +103,10 @@ Link the repo's addon folder into WoW once. The game then loads your working
 copy directly, so you don't need to copy files:
 
 ```powershell
-.\scripts\link-addon.ps1 -WowPath "C:\Program Files (x86)\World of Warcraft\_retail_"
+.\scripts\link-addon.ps1 -WowPath "C:\Program Files (x86)\World of Warcraft\_forever_"
 ```
 
-Use the folder that contains `Interface`. For Forever, this will be its own
-folder; reports so far mention `_forever_` or `_classic_beta_`.
+Use the folder that contains `Interface`. For WoW Forever, that's `_forever_`.
 
 After that, the loop is: **edit → `/reload` in game → check**.
 
@@ -149,10 +148,11 @@ lua tests/run.lua
 
 Things that can only be confirmed once the WoW Forever client is out:
 
-- [ ] **Interface number.** In game, run
-      `/run print(select(4, GetBuildInfo()))` and put that number in
-      `## Interface:` in the `.toc`. Until then, turn on "Load out of date AddOns".
-- [ ] **Addon folder path.** Find it, then run `link-addon.ps1` with it.
+- [ ] **Interface number.** The `.toc` uses `16001`, based on the installed
+      client (version 1.60.1). If the game lists the addon as out of date
+      after a patch, run `/run print(select(4, GetBuildInfo()))` in game
+      and put that number in `## Interface:`.
+- [x] **Addon folder path.** `_forever_\Interface\AddOns`, linked with `link-addon.ps1`.
 - [ ] **Messages get through.** With a second character in the same guild,
       run `/mforever debug on`, then `/mforever ping`. Each should show up in
       the other's `/mforever list`.

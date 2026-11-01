@@ -1,4 +1,4 @@
-## Interface: 120000, 120001, 120005
+## Interface: 16001
 ## Title: Motion-Forever
 ## Notes: Shows guild members who also run Motion-Forever on your world map.
 ## Version: 0.1.0
