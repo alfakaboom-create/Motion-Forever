@@ -47,16 +47,9 @@ contain `Q`.
 | Type | Fields (planned) | Meaning |
 |---|---|---|
 | `QREQ` | none | "Which quests can you share?" |
-| `QLIST` | `part;total;id,id,id...` | Quest IDs I can share, split across several messages if it's too long for one |
-| `QASK` | `questID` | "Please share this quest with me." The other player sees a popup to accept or decline. |
-| `QREPLY` | `questID;status` | `status` is `ok`, `declined`, `busy` or `failed` |
+| `QLIST` | `part;total;id:level:zone,...` | Quests I can share, split across several messages if it's too long for one |
+| `QASK` | `id,id,...` | "Please share these quests with me": one or more quests the requester ticked. The other player sees one popup to accept or decline. |
+| `QREPLY` | `id:status,...` | `status` per quest: `ok`, `declined`, `busy`, `ineligible` or `failed` |
 
-Planned flow:
-
-1. Hover over a dot. If they have `Q`, send `QREQ`.
-2. They reply with `QLIST`. Hide quests you've completed or already have.
-3. Show "N quests available" in the tooltip.
-4. Click to choose a quest and send `QASK`.
-5. They see a popup and click Invite & Share. The game requires that click
-   before an addon can invite someone.
-6. They invite you to a party, share the quest, then send `QREPLY`.
+The full flow, the quest selection window, and the cases to handle are in
+[PHASE2.md](PHASE2.md).

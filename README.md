@@ -27,7 +27,8 @@ Motion-Forever shares them itself:
 - [x] Option to stop sharing your position
 - [ ] Minimap dots
 - [ ] Settings panel (only slash commands for now)
-- [ ] **Phase 2:** see which quests a guild member can share with you, and request them
+- [ ] **Phase 2:** see which quests a guild member can share with you, pick the
+      ones you want, and request them. See [docs/PHASE2.md](docs/PHASE2.md)
 
 ## Commands
 
@@ -56,7 +57,9 @@ Motion-Forever/             <- repo root
 │  └─ Commands.lua          /mforever
 ├─ tests/run.lua            unit tests, run outside the game
 ├─ scripts/                 link-addon.ps1 and package.ps1
-└─ docs/PROTOCOL.md         message format, including phase 2 plans
+└─ docs/
+   ├─ PROTOCOL.md           message format, including phase 2 messages
+   └─ PHASE2.md             phase 2 ideas and design (quest sharing)
 ```
 
 ## Built with phase 2 in mind
