@@ -57,7 +57,7 @@ works without messages. Send the debug output from both players.
 | # | Do this | Expected |
 |---|---|---|
 | D1 | Same zone. Player 1 opens the world map | A class-colored dot where Player 2 stands |
-| D2 | Hover over the dot | Tooltip with name, level and zone |
+| D2 | Hover over the dot | Tooltip with name, level, layer and zone |
 | D3 | Player 2 walks while the map is open | The dot moves every few seconds; the tooltip doesn't flicker |
 | D4 | Zoom the map out to the continent | The dot is still there, in the right spot |
 | D5 | Zoom out to the whole world map | Note whether the dot shows. It may not, which is expected |
@@ -70,7 +70,7 @@ works without messages. Send the debug output from both players.
 
 | # | Do this | Expected |
 |---|---|---|
-| E1 | `/mforever` | The window opens, with Name, Level, Zone and Status columns |
+| E1 | `/mforever` | The window opens, with Name, Level, Zone, Layer and Status columns |
 | E2 | Look at Player 2's row | Class-colored name, correct level and zone, "On map" |
 | E3 | Look at guildies without the addon | Listed below in grey, with "No addon" |
 | E4 | Untick "Show members without addon" | They disappear; the footer count changes |
@@ -102,6 +102,21 @@ works without messages. Send the debug output from both players.
 | G3 | Join a party with Player 2 | Both the normal party dot and the Motion-Forever dot show. Note if that's confusing |
 | G4 | Play for an hour with the addon on | No slowdown, no errors piling up in BugSack |
 | G5 | A busy guild evening, if possible | Note whether `/mforever list` and the window stay responsive |
+
+## H. Layers
+
+First check the server has layers at all: two players in the same spot who
+can't see each other are on different layers. If Forever has no layers,
+everyone should always show "Same".
+
+| # | Do this | Expected |
+|---|---|---|
+| H1 | In the open world, target any NPC, then `/mforever status` | "Your layer:" shows two numbers, like `0-1234`. If it stays "unknown", send the output: the game may be hiding NPC IDs |
+| H2 | Both players stand together and can see each other | Hovering the dot says "Same layer as you"; the guild list says "Same" |
+| H3 | Get onto different layers (for example, one joins a group led by someone on another layer) | Within a few seconds of seeing an NPC: "Different layer" / "Different" |
+| H4 | Player 2 enters a dungeon | Player 1 sees "Layer unknown" for them |
+| H5 | Players on different continents | "Layer unknown". This is expected |
+| H6 | Fight NPCs for a while | No errors in BugSack |
 
 ---
 

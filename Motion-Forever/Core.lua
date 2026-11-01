@@ -27,6 +27,7 @@ ns.defaults = {
 --   READY                       settings loaded, safe to start
 --   ROSTER_CHANGED(name, kind)  kind = "added" | "updated" | "removed"
 --   SETTINGS_CHANGED(key)
+--   LAYER_CHANGED(key)          our layer changed (key is nil when unknown)
 --   PIN_TOOLTIP(tooltip, entry) add lines to a map pin tooltip
 --   PIN_CLICK(entry, button)    a map pin was clicked
 --   GUILDLIST_ROW_CLICK(row, button)  a guild list row was clicked

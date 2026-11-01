@@ -26,11 +26,20 @@ These rules let people on old and new versions of the addon play together.
 | Type | Fields | Meaning |
 |---|---|---|
 | `HELLO` | none | "I just came online." Everyone replies with `POS` within about 3 seconds, at a random time so replies don't all arrive at once. |
-| `POS` | `mapID;x;y;class;level;caps` | My position. `x` and `y` are whole numbers from 0 to 10000 (0.0001 of the map each). They're empty when the position is hidden, for example in dungeons. |
+| `POS` | `mapID;x;y;class;level;caps;layer` | My position. `x` and `y` are whole numbers from 0 to 10000 (0.0001 of the map each). They're empty when the position is hidden, for example in dungeons. `layer` is empty when unknown, and missing from older versions. |
 | `BYE` | none | "Stop showing me": I logged out or turned sharing off. |
 
 Example: `1;POS;1429;4512;6230;MAGE;12;` is a level 12 mage in Elwynn Forest
-(map 1429), at 45.1, 62.3.
+(map 1429), at 45.1, 62.3, on an unknown layer.
+
+### The layer field
+
+`layer` is `continent-zoneUID`, for example `0-1234`. It's read from the
+hidden ID of nearby NPCs (see `Layer.lua`). The numbers mean nothing on
+their own: two players are on the same layer when their keys match, and
+keys from different continents can't be compared. It's empty in instances,
+right after a loading screen or group change, and until the player has
+seen an NPC. A change of layer sends a `POS` within a few seconds.
 
 ### Timing
 

@@ -11,7 +11,7 @@ ns.Roster = Roster
 
 -- An entry looks like:
 -- {
---   name = "Name-Realm", mapID, x, y, class, level, caps, lastSeen,
+--   name = "Name-Realm", mapID, x, y, class, level, caps, layer, lastSeen,
 --   quests = nil,  -- phase 2: shareable quest IDs, filled from QLIST
 -- }
 
@@ -34,6 +34,7 @@ function Roster:Update(name, data, now)
 	entry.class = data.class or entry.class
 	entry.level = data.level or entry.level
 	entry.caps = data.caps or ""
+	entry.layer = data.layer -- nil when unknown, or from an older addon
 	entry.lastSeen = now
 	-- entry.quests is left alone on purpose: it's managed by phase 2.
 

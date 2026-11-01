@@ -12,6 +12,7 @@ function GetTime() return fakeTime end
 function IsInGuild() return true end
 function GetNormalizedRealmName() return "TestRealm" end
 function geterrorhandler() return function(err) error(err, 0) end end
+unpack = unpack or table.unpack -- WoW has Lua 5.1's global unpack
 
 local sent = {}
 
@@ -37,12 +38,13 @@ end
 
 load("Protocol.lua")
 load("Roster.lua")
+load("Layer.lua")
 load("Comm.lua")
 load("Position.lua")
 load("GuildListData.lua")
 
 local P, Roster, Comm, Position = ns.Protocol, ns.Roster, ns.Comm, ns.Position
-local GuildList = ns.GuildList
+local GuildList, Layer = ns.GuildList, ns.Layer
 
 ---------------------------------------------------------------------------
 -- Tiny test runner
@@ -127,11 +129,23 @@ end)
 
 test("POS round trip", function()
 	local msg = P.EncodePos({ mapID = 1429, x = 0.4512, y = 0.623, class = "MAGE", level = 12, caps = "" })
-	eq(msg, "1;POS;1429;4512;6230;MAGE;12;")
+	eq(msg, "1;POS;1429;4512;6230;MAGE;12;;")
 	local _, _, fields = P.Decode(msg)
 	local pos = P.DecodePos(fields)
 	eq(pos.mapID, 1429); eq(pos.x, 0.4512); eq(pos.y, 0.623)
-	eq(pos.class, "MAGE"); eq(pos.level, 12)
+	eq(pos.class, "MAGE"); eq(pos.level, 12); eq(pos.layer, nil)
+end)
+
+test("POS carries the layer at the end", function()
+	local msg = P.EncodePos({ mapID = 1429, x = 0.5, y = 0.5, class = "MAGE", level = 12, caps = "", layer = "0-1234" })
+	eq(msg, "1;POS;1429;5000;5000;MAGE;12;;0-1234")
+	local _, _, fields = P.Decode(msg)
+	eq(P.DecodePos(fields).layer, "0-1234")
+end)
+
+test("POS ignores a malformed layer", function()
+	local _, _, fields = P.Decode("1;POS;1429;5000;5000;MAGE;12;;garbage")
+	eq(P.DecodePos(fields).layer, nil)
 end)
 
 test("POS without coordinates (in a dungeon)", function()
@@ -271,6 +285,11 @@ test("sends after moving, but not faster than minInterval", function()
 	eq(Position.ShouldSend(103, 100, here, moved, settings), true)
 end)
 
+test("a layer change counts as moving", function()
+	eq(Position.HasMoved({ mapID = 1, x = 0.5, y = 0.5, layer = "0-1" }, { mapID = 1, x = 0.5, y = 0.5, layer = "0-2" }), true)
+	eq(Position.HasMoved({ mapID = 1, layer = "0-1" }, { mapID = 1, layer = "0-1" }), false)
+end)
+
 test("tiny movements don't count", function()
 	local nudged = { mapID = 1, x = 0.5004, y = 0.5 }
 	eq(Position.HasMoved(here, nudged), false)
@@ -285,6 +304,45 @@ end)
 test("early send request wins", function()
 	eq(Position.ShouldSend(101, 100, here, here, settings, 101), true)
 	eq(Position.ShouldSend(101, 100, here, here, settings, 102), false)
+end)
+
+---------------------------------------------------------------------------
+-- Layers
+---------------------------------------------------------------------------
+print("Layer")
+
+test("reads the layer from an NPC's GUID", function()
+	eq(Layer.KeyFromGUID("Creature-0-4372-0-1234-299-0000123456"), "0-1234")
+	eq(Layer.KeyFromGUID("Vehicle-0-4372-1-5678-299-0000123456"), "1-5678")
+end)
+
+test("ignores GUIDs without a layer", function()
+	eq(Layer.KeyFromGUID("Player-4372-0ABCDEF1"), nil)
+	eq(Layer.KeyFromGUID("Pet-0-4372-0-1234-299-0100000001"), nil)
+	eq(Layer.KeyFromGUID("Creature-0-4372-0-0-299-0000123456"), nil, "zoneUID 0")
+	eq(Layer.KeyFromGUID(nil), nil)
+	eq(Layer.KeyFromGUID("nonsense"), nil)
+end)
+
+test("compares layers", function()
+	eq(Layer.Compare("0-1234", "0-1234"), "same")
+	eq(Layer.Compare("0-1234", "0-5678"), "different")
+	eq(Layer.Compare("0-1234", "1-1234"), nil, "different continents")
+	eq(Layer.Compare(nil, "0-1234"), nil)
+	eq(Layer.Compare("0-1234", nil), nil, "older addon or unknown")
+end)
+
+test("describes layers for players", function()
+	eq((Layer.Describe("same")), "Same layer as you")
+	eq((Layer.Describe("different", true)), "Different")
+	eq((Layer.Describe(nil)), "Layer unknown")
+end)
+
+test("layer from a POS reaches the roster", function()
+	Comm:OnMessage("MotionForever", "1;POS;1429;5000;2500;PRIEST;30;;0-42", "GUILD", "Ann-TestRealm")
+	eq(Roster:Get("Ann-TestRealm").layer, "0-42")
+	Comm:OnMessage("MotionForever", "1;POS;1429;5000;2500;PRIEST;30;", "GUILD", "Ann-TestRealm")
+	eq(Roster:Get("Ann-TestRealm").layer, nil, "cleared when no longer sent")
 end)
 
 ---------------------------------------------------------------------------
@@ -329,6 +387,18 @@ test("lists addon users with zone, dungeon and position flags", function()
 	eq(rows["Ann-TestRealm"].hasPosition, true)
 	eq(rows["Bob-TestRealm"].inDungeon, true)
 	eq(rows["Bob-TestRealm"].hasPosition, false)
+end)
+
+test("rows compare each member's layer with ours", function()
+	local members = sampleAddonMembers()
+	members["Ann-TestRealm"].layer = "0-7"
+	members["Bob-TestRealm"].layer = "0-8"
+	local opts = listOpts(true)
+	opts.myLayer = "0-7"
+	local rows = byName(GuildList.BuildRows(members, sampleGuild, opts))
+	eq(rows["Ann-TestRealm"].layer, "same")
+	eq(rows["Bob-TestRealm"].layer, "different")
+	eq(rows["Dee-TestRealm"].layer, nil, "no addon")
 end)
 
 test("leaves yourself out", function()

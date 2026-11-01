@@ -6,8 +6,9 @@ window. README.md covers features, layout and workflow for people.
 
 ## Status (as of 2026-11-01)
 
-- Phase 1 (map dots) and phase 2 step 1 (guild list window) are built and
-  unit tested, but **nothing has been tested in game**. WoW Forever is
+- Phase 1 (map dots), phase 2 step 1 (guild list window) and layer display
+  (`Layer.lua`, branch `layer-display`) are built and unit tested, but
+  **nothing has been tested in game**. WoW Forever is
   installed and hasn't launched yet.
 - Next: launch-day testing with `docs/LAUNCH-TESTING.md`, then phase 2
   step 2 (quest lists, `QREQ`/`QLIST`). The plan and build order are in

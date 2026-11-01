@@ -25,7 +25,10 @@ Motion-Forever shares them itself:
 
 **Phase 1: guild members on the map**
 - [x] Guild members shown on zone and continent maps, colored by class
-- [x] Tooltip on hover: name, level and zone
+- [x] Tooltip on hover: name, level, layer and zone
+- [x] Layers: shows whether each guild member is on the same layer as you,
+      in the map tooltip and the guild list. Worked out from nearby NPCs, so
+      it reads "unknown" until you've seen one
 - [x] Members in dungeons are still listed, without an exact position
 - [x] Option to stop sharing your position
 - [ ] Minimap dots
@@ -54,11 +57,11 @@ Motion-Forever shares them itself:
 | Command | What it does |
 |---|---|
 | `/mforever` | Opens or closes the guild list window |
-| `/mforever list` | Lists tracked guild members with zone and position, in chat |
+| `/mforever list` | Lists tracked guild members with zone, position and layer, in chat |
 | `/mforever share on\|off` | Turns sharing your position on or off |
 | `/mforever show on\|off` | Shows or hides guild members on your map |
 | `/mforever ping` | Asks everyone to send their position now |
-| `/mforever status` | Shows your settings and your current position |
+| `/mforever status` | Shows your settings, your current position and your layer |
 | `/mforever debug on\|off` | Prints extra messages, useful for testing |
 | `/mforever help` | Lists all commands |
 
@@ -77,6 +80,7 @@ Motion-Forever/             <- repo root
 │  ├─ Core.lua              shared setup, settings, internal events
 │  ├─ Protocol.lua          message format (no game calls, unit tested)
 │  ├─ Roster.lua            who's online and where (no game calls, unit tested)
+│  ├─ Layer.lua             which layer you and guild members are on (partly unit tested)
 │  ├─ Compat.lua            every game API call that might differ on Forever
 │  ├─ Comm.lua              sending and receiving messages
 │  ├─ Position.lua          when to send your position
@@ -197,9 +201,9 @@ A public repo shows the commit author email to anyone.
 # Launch testing
 
 The step-by-step checklist is in [docs/LAUNCH-TESTING.md](docs/LAUNCH-TESTING.md).
-It covers 45 checks across loading, your position, messages between two
-players, map dots, the guild list window, settings, and situations like
-combat and dungeons.
+It covers 51 checks across loading, your position, messages between two
+players, map dots, the guild list window, settings, situations like
+combat and dungeons, and layers.
 
 Already done:
 

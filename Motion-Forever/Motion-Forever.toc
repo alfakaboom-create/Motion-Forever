@@ -8,6 +8,7 @@
 Core.lua
 Protocol.lua
 Roster.lua
+Layer.lua
 Compat.lua
 Comm.lua
 Position.lua

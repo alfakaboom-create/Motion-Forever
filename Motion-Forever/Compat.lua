@@ -66,6 +66,40 @@ function Compat.GetPlayerClassAndLevel()
 end
 
 ---------------------------------------------------------------------------
+-- Layers (see Layer.lua for how this works)
+---------------------------------------------------------------------------
+
+-- True outside dungeons, raids, battlegrounds and so on.
+function Compat.IsInOpenWorld()
+	local ok, inInstance = pcall(IsInInstance)
+	return ok and not inInstance
+end
+
+-- Returns the layer key read from an NPC unit, or nil. Players and pets
+-- are skipped. Midnight can hide GUIDs as "secret" values, so this is
+-- wrapped in pcall and returns nil if they're hidden.
+function Compat.GetUnitLayer(unit)
+	local ok, key = pcall(function()
+		if not UnitExists(unit) or UnitIsPlayer(unit) or UnitPlayerControlled(unit) then return nil end
+		local guid = UnitGUID(unit)
+		if guid == nil or (issecretvalue and issecretvalue(guid)) then return nil end
+		return ns.Layer.KeyFromGUID(guid)
+	end)
+	if ok then return key end
+	return nil
+end
+
+-- Units for the nameplates currently on screen.
+function Compat.GetNameplateUnits()
+	local units = {}
+	for i = 1, 40 do
+		local unit = "nameplate" .. i
+		if UnitExists(unit) then units[#units + 1] = unit end
+	end
+	return units
+end
+
+---------------------------------------------------------------------------
 -- Maps
 ---------------------------------------------------------------------------
 function Compat.GetMapName(mapID)

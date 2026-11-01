@@ -44,6 +44,13 @@ GuildList.columns = {
 		end,
 	},
 	{
+		key = "layer", label = "Layer", width = 70, sortable = false,
+		text = function(row)
+			if not row.hasAddon then return "" end
+			return ns.Layer.Describe(row.layer, true)
+		end,
+	},
+	{
 		key = "status", label = "Status", width = 110, sortable = false,
 		text = function(row)
 			if not row.hasAddon then return "No addon", unpack(GREY) end
@@ -66,6 +73,7 @@ local function Refresh()
 		selfName = ns.GetPlayerFullName(),
 		mapName = ns.Compat.GetMapName,
 		isDungeon = ns.Compat.IsDungeonMap,
+		myLayer = ns.Layer.mine,
 	})
 	GuildList.SortRows(rows, ns.db.listSort, ns.db.listAscending)
 
@@ -260,4 +268,5 @@ function GuildList:IsShown()
 end
 
 ns.On("ROSTER_CHANGED", QueueRefresh)
+ns.On("LAYER_CHANGED", QueueRefresh)
 ns.RegisterGameEvent("GUILD_ROSTER_UPDATE", QueueRefresh)

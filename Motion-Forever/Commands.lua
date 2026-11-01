@@ -34,7 +34,9 @@ local function printList()
 		else
 			where = zone .. " (no exact position)"
 		end
-		print(string.format("  %s - %s, %ds ago", Ambiguate(name, "guild"), where, math.floor(now - entry.lastSeen)))
+		local layer = ns.Layer.Describe(ns.Layer.Compare(ns.Layer.mine, entry.layer))
+		print(string.format("  %s - %s, %s, %ds ago", Ambiguate(name, "guild"), where, layer:lower(),
+			math.floor(now - entry.lastSeen)))
 	end
 end
 
@@ -49,6 +51,7 @@ local function printStatus()
 	else
 		ns.Print("Your map: unknown")
 	end
+	ns.Print("Your layer: " .. (ns.Layer.mine or "unknown (target or mouse over an NPC)"))
 end
 
 SLASH_MOTIONFOREVER1 = "/mforever"

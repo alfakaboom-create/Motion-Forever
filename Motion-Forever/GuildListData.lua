@@ -17,9 +17,11 @@ ns.GuildList = GuildList
 --   selfName   our own "Name-Realm", left out of the list
 --   mapName    function(mapID) -> zone name
 --   isDungeon  function(mapID) -> true if the map is a dungeon or raid
+--   myLayer    our layer key, or nil if unknown
 --
 -- A row looks like:
 -- { name, class, level, zone, hasAddon, hasPosition, inDungeon,
+--   layer,          -- "same", "different" or nil (see Layer.Compare)
 --   quests = nil }  -- phase 2: quest count, filled in from QLIST
 function GuildList.BuildRows(addonMembers, guildMembers, opts)
 	local rows, byName = {}, {}
@@ -33,6 +35,7 @@ function GuildList.BuildRows(addonMembers, guildMembers, opts)
 				hasAddon = true,
 				hasPosition = entry.x ~= nil,
 				inDungeon = false,
+				layer = ns.Layer.Compare(opts.myLayer, entry.layer),
 			}
 			if entry.mapID then
 				row.zone = opts.mapName(entry.mapID)

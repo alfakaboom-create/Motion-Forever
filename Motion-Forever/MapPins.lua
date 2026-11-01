@@ -36,6 +36,7 @@ function MotionForeverPinMixin:OnMouseEnter()
 	if entry.level then
 		GameTooltip:AddLine(LEVEL .. " " .. entry.level, 1, 1, 1)
 	end
+	GameTooltip:AddLine(ns.Layer.Describe(ns.Layer.Compare(ns.Layer.mine, entry.layer)))
 	local zone = ns.Compat.GetMapName(entry.mapID)
 	if zone then
 		GameTooltip:AddLine(zone, 0.8, 0.8, 0.8)

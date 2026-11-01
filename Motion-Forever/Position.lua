@@ -19,6 +19,7 @@ local MOVE_THRESHOLD = 0.001 -- 0.1% of the map counts as having moved
 function Position.HasMoved(a, b)
 	if not a or not b then return true end
 	if a.mapID ~= b.mapID then return true end
+	if a.layer ~= b.layer then return true end
 	if (a.x == nil) ~= (b.x == nil) then return true end
 	if a.x == nil then return false end
 	return math.abs(a.x - b.x) >= MOVE_THRESHOLD or math.abs(a.y - b.y) >= MOVE_THRESHOLD
@@ -43,6 +44,7 @@ function Position:BuildPayload()
 		class = class,
 		level = level,
 		caps = ns.GetCaps(),
+		layer = ns.Layer.mine,
 	}
 end
 
@@ -116,6 +118,9 @@ end)
 ns.On("SETTINGS_CHANGED", function(key)
 	if key == "heartbeat" then ns.Roster.timeout = ns.db.heartbeat * 3 end
 end)
+
+-- Tell the guild soon when we find out (or lose track of) our layer.
+ns.On("LAYER_CHANGED", function() Position:RequestSoon() end)
 
 ns.RegisterGameEvent("PLAYER_ENTERING_WORLD", function(isLogin, isReload)
 	if isLogin or isReload then
