@@ -62,6 +62,7 @@ Motion-Forever shares them itself:
 | `/mforever show on\|off` | Shows or hides guild members on your map |
 | `/mforever ping` | Asks everyone to send their position now |
 | `/mforever status` | Shows your settings, your current position and your layer |
+| `/mforever layer` | Checks your layer and explains what it read from your target (target an NPC first) |
 | `/mforever debug on\|off` | Prints extra messages, useful for testing |
 | `/mforever help` | Lists all commands |
 

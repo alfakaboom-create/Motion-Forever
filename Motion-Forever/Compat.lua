@@ -89,6 +89,24 @@ function Compat.GetUnitLayer(unit)
 	return nil
 end
 
+-- For /mforever layer: explains what the game tells us about a unit, so
+-- we can see why no layer was found. Returns a line of text.
+function Compat.DescribeUnitForLayer(unit)
+	local ok, text = pcall(function()
+		if not UnitExists(unit) then return "nothing targeted" end
+		local name = UnitName(unit) or "?"
+		if UnitIsPlayer(unit) then return name .. " is a player (target an NPC instead)" end
+		if UnitPlayerControlled(unit) then return name .. " is a pet (target an NPC instead)" end
+		local guid = UnitGUID(unit)
+		if guid == nil then return name .. ": the game gave no ID" end
+		if issecretvalue and issecretvalue(guid) then return name .. ": the game is hiding its ID" end
+		local key = ns.Layer.KeyFromGUID(guid)
+		return string.format("%s: ID %s -> layer %s", name, tostring(guid), key or "none found in this ID")
+	end)
+	if ok then return text end
+	return "error reading unit: " .. tostring(text)
+end
+
 -- Units for the nameplates currently on screen.
 function Compat.GetNameplateUnits()
 	local units = {}

@@ -35,11 +35,14 @@ function Layer.IsKey(text)
 	return type(text) == "string" and text:match("^%d+%-%d+$") ~= nil
 end
 
--- Returns "same", "different", or nil when it can't be told (either layer
--- unknown, or the two players are on different continents).
+-- Returns "same" or "different" when it can be told. Otherwise says why
+-- not: "mine-unknown" (we haven't found our layer yet), "theirs-unknown"
+-- (they haven't, or they run an older copy), or "elsewhere" (different
+-- continents, so layers can't be compared).
 function Layer.Compare(mine, theirs)
-	if not Layer.IsKey(mine) or not Layer.IsKey(theirs) then return nil end
-	if mine:match("^(%d+)") ~= theirs:match("^(%d+)") then return nil end
+	if not Layer.IsKey(mine) then return "mine-unknown" end
+	if not Layer.IsKey(theirs) then return "theirs-unknown" end
+	if mine:match("^(%d+)") ~= theirs:match("^(%d+)") then return "elsewhere" end
 	return mine == theirs and "same" or "different"
 end
 
@@ -53,6 +56,12 @@ function Layer.Describe(state, short)
 		return short and "Same" or "Same layer as you", unpack(GREEN)
 	elseif state == "different" then
 		return short and "Different" or "Different layer", unpack(ORANGE)
+	elseif state == "mine-unknown" then
+		return short and "Unknown" or "Layer unknown: target any NPC", unpack(GREY)
+	elseif state == "theirs-unknown" then
+		return short and "Unknown" or "Their layer isn't known yet", unpack(GREY)
+	elseif state == "elsewhere" then
+		return short and "Elsewhere" or "On another continent", unpack(GREY)
 	end
 	return short and "Unknown" or "Layer unknown", unpack(GREY)
 end
@@ -73,7 +82,15 @@ function Layer:Observe(unit)
 	if key then self:Set(key) end
 end
 
-function Layer:ScanNameplates()
+-- Units worth checking besides nameplates: current target, what the mouse
+-- is over, and the soft targets used by action targeting.
+local NEARBY_UNITS = { "target", "mouseover", "focus", "softenemy", "softfriend", "softinteract" }
+
+-- Checks every NPC we can currently see.
+function Layer:ScanAround()
+	for _, unit in ipairs(NEARBY_UNITS) do
+		self:Observe(unit)
+	end
 	for _, unit in ipairs(ns.Compat.GetNameplateUnits()) do
 		self:Observe(unit)
 	end
@@ -83,8 +100,16 @@ end
 -- then look again at what's around us a moment later.
 function Layer:Reset()
 	self:Set(nil)
-	C_Timer.After(3, function() Layer:ScanNameplates() end)
+	C_Timer.After(3, function() Layer:ScanAround() end)
 end
+
+-- While our layer is unknown, keep looking every few seconds, so it's found
+-- even if the NPC was targeted before a loading screen finished.
+ns.On("READY", function()
+	C_Timer.NewTicker(5, function()
+		if not Layer.mine then Layer:ScanAround() end
+	end)
+end)
 
 ns.RegisterGameEvent("PLAYER_TARGET_CHANGED", function() Layer:Observe("target") end)
 ns.RegisterGameEvent("UPDATE_MOUSEOVER_UNIT", function() Layer:Observe("mouseover") end)

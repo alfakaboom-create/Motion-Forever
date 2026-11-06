@@ -14,6 +14,7 @@ local function printHelp()
 	print("  /mforever show on|off - show guild members on your map")
 	print("  /mforever ping - ask everyone to send their position now")
 	print("  /mforever status - current settings")
+	print("  /mforever layer - check your layer (target an NPC first)")
 	print("  /mforever debug on|off - extra chat output for testing")
 end
 
@@ -35,7 +36,7 @@ local function printList()
 			where = zone .. " (no exact position)"
 		end
 		local layer = ns.Layer.Describe(ns.Layer.Compare(ns.Layer.mine, entry.layer))
-		print(string.format("  %s - %s, %s, %ds ago", Ambiguate(name, "guild"), where, layer:lower(),
+		print(string.format("  %s - %s, %s, %ds ago", ns.ShortName(name), where, layer,
 			math.floor(now - entry.lastSeen)))
 	end
 end
@@ -52,6 +53,14 @@ local function printStatus()
 		ns.Print("Your map: unknown")
 	end
 	ns.Print("Your layer: " .. (ns.Layer.mine or "unknown (target or mouse over an NPC)"))
+end
+
+-- Explains how the layer was (or wasn't) worked out, for testing.
+local function printLayer()
+	ns.Layer:ScanAround()
+	ns.Print("Your layer: " .. (ns.Layer.mine or "unknown"))
+	print("  Open world: " .. (ns.Compat.IsInOpenWorld() and "yes" or "no (layers only work outside instances)"))
+	print("  Target: " .. ns.Compat.DescribeUnitForLayer("target"))
 end
 
 SLASH_MOTIONFOREVER1 = "/mforever"
@@ -76,6 +85,8 @@ SlashCmdList.MOTIONFOREVER = function(input)
 		ns.Print("Asked the guild for positions.")
 	elseif cmd == "status" then
 		printStatus()
+	elseif cmd == "layer" then
+		printLayer()
 	elseif cmd == "debug" and (arg == "on" or arg == "off") then
 		ns.SetOption("debug", arg == "on")
 		ns.Print("Debug: " .. onOff(ns.db.debug))

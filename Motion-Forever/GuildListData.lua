@@ -21,7 +21,7 @@ ns.GuildList = GuildList
 --
 -- A row looks like:
 -- { name, class, level, zone, hasAddon, hasPosition, inDungeon,
---   layer,          -- "same", "different" or nil (see Layer.Compare)
+--   layer,          -- "same", "different", why it is unknown, or nil without the addon (see Layer.Compare)
 --   quests = nil }  -- phase 2: quest count, filled in from QLIST
 function GuildList.BuildRows(addonMembers, guildMembers, opts)
 	local rows, byName = {}, {}

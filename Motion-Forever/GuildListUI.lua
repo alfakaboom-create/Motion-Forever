@@ -26,7 +26,7 @@ GuildList.columns = {
 	{
 		key = "name", label = "Name", width = 140,
 		text = function(row)
-			return Ambiguate(row.name, "guild"), classColor(row)
+			return ns.ShortName(row.name), classColor(row)
 		end,
 	},
 	{

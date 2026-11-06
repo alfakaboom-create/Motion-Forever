@@ -13,8 +13,10 @@ MotionForeverPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function MotionForeverPinMixin:OnLoad()
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_GROUP_MEMBER")
-	self:SetScalingLimits(1, 1.0, 1.4)
-	self.Border:SetVertexColor(0, 0, 0, 0.9)
+	-- Small and slightly see-through, so dots don't cover the map.
+	self:SetScalingLimits(1, 0.8, 1.15)
+	self:SetAlpha(0.85)
+	self.Border:SetVertexColor(0, 0, 0, 0.7)
 end
 
 function MotionForeverPinMixin:OnAcquired(entry, x, y)
@@ -32,7 +34,7 @@ function MotionForeverPinMixin:OnMouseEnter()
 	if not entry then return end
 
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	GameTooltip:AddLine(Ambiguate(entry.name, "guild"), ns.Compat.GetClassColor(entry.class))
+	GameTooltip:AddLine(ns.ShortName(entry.name), ns.Compat.GetClassColor(entry.class))
 	if entry.level then
 		GameTooltip:AddLine(LEVEL .. " " .. entry.level, 1, 1, 1)
 	end
@@ -135,7 +137,19 @@ local function QueueUpdate()
 	end)
 end
 
+-- If the mouse is over one of our dots, redraw its tooltip so new info
+-- (like a layer that was just found) shows without moving the mouse.
+local function RefreshTooltip()
+	if not GameTooltip:IsShown() then return end
+	local owner = GameTooltip:GetOwner()
+	if owner and owner.OnMouseEnter == MotionForeverPinMixin.OnMouseEnter and owner:IsMouseOver() then
+		owner:OnMouseEnter()
+	end
+end
+
 ns.On("ROSTER_CHANGED", QueueUpdate)
+ns.On("ROSTER_CHANGED", RefreshTooltip)
+ns.On("LAYER_CHANGED", RefreshTooltip)
 ns.On("SETTINGS_CHANGED", function(key)
 	if key == "show" then QueueUpdate() end
 end)

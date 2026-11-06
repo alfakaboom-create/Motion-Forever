@@ -106,6 +106,12 @@ function ns.GetPlayerFullName()
 	return name
 end
 
+-- "Name-Realm" -> "Name". Names shown to players leave out the server.
+function ns.ShortName(name)
+	if not name then return nil end
+	return name:match("^[^%-]+") or name
+end
+
 function ns.SetOption(key, value)
 	ns.db[key] = value
 	ns.Fire("SETTINGS_CHANGED", key)
