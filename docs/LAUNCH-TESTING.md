@@ -109,15 +109,19 @@ First check the server has layers at all: two players in the same spot who
 can't see each other are on different layers. If Forever has no layers,
 everyone should always show "Same".
 
+Both players need the same version of the addon for these.
+
 | # | Do this | Expected |
 |---|---|---|
-| H1 | In the open world, target any NPC, then `/mforever layer` | "Your layer:" shows two numbers, like `0-1234`. If it stays "unknown", send the whole output: it shows the NPC's ID and why no layer was found |
-| H2 | Both players stand together and can see each other | Hovering the dot says "Same layer as you"; the guild list says "Same" |
+| H1 | In the open world, target any NPC, then `/mforever layer` | "Your layer:" shows two numbers, like `1429:1234`. If it stays "unknown", send the whole output: it shows the NPC's ID and why no layer was found |
+| H2 | Both players stand together and can see each other. Both target an NPC | Hovering the dot says "Same layer as you"; the guild list says "Same". If not, send `/mforever layer` from **both** players |
 | H3 | Get onto different layers (for example, one joins a group led by someone on another layer) | Within a few seconds of seeing an NPC: "Different layer" / "Different" |
 | H4 | Player 2 enters a dungeon | Player 1 sees "Their layer isn't known yet" for them |
-| H5 | Players on different continents | "On another continent" / "Elsewhere". This is expected |
+| H5 | Players in different zones (or on different continents) | "In another zone: can't compare" / "Other zone". This is expected |
 | H6 | Fight NPCs for a while | No errors in BugSack |
 | H7 | Player 2 /reloads and doesn't target anything. Player 1 hovers Player 2's dot, keeps the mouse there, and Player 2 then targets an NPC | Within a few seconds the tooltip changes from "Their layer isn't known yet" to a layer result, without moving the mouse |
+| H8 | Same layer, then Player 2 walks into the next zone and targets an NPC there | "In another zone" while apart; "Same layer as you" again once Player 2 is back and has seen an NPC |
+| H9 | Stand near a zone border with nameplates on | The result doesn't flip back and forth |
 
 ---
 

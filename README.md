@@ -28,7 +28,8 @@ Motion-Forever shares them itself:
 - [x] Tooltip on hover: name, level, layer and zone
 - [x] Layers: shows whether each guild member is on the same layer as you,
       in the map tooltip and the guild list. Worked out from nearby NPCs, so
-      it reads "unknown" until you've seen one
+      it reads "unknown" until you've seen one. Only compares players in the
+      same zone, because the game's layer numbers differ from zone to zone
 - [x] Members in dungeons are still listed, without an exact position
 - [x] Option to stop sharing your position
 - [ ] Minimap dots
@@ -202,7 +203,7 @@ A public repo shows the commit author email to anyone.
 # Launch testing
 
 The step-by-step checklist is in [docs/LAUNCH-TESTING.md](docs/LAUNCH-TESTING.md).
-It covers 51 checks across loading, your position, messages between two
+It covers 54 checks across loading, your position, messages between two
 players, map dots, the guild list window, settings, situations like
 combat and dungeons, and layers.
 

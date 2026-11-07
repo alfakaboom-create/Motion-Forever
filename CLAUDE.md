@@ -12,6 +12,11 @@ window. README.md covers features, layout and workflow for people.
   without server, clearer layer status, `/mforever layer`) is in.
 - Layer detection isn't confirmed working in game yet. If it stays
   unknown, the output of `/mforever layer` shows the NPC ID the game gives.
+- 2026-11-08: same-layer players showed "Different layer". Cause: the
+  layer number in NPC IDs (zoneUID) differs per zone, not just per layer.
+  Fix on branch `fix-layer-compare`: keys are now `zoneMapID:zoneUID`,
+  only same-zone keys are compared, and the key is a vote over the last 9
+  NPCs. Old `0-1234` keys are ignored. Not yet confirmed in game.
 - Next: launch-day testing with `docs/LAUNCH-TESTING.md`, then phase 2
   step 2 (quest lists, `QREQ`/`QLIST`). The plan and build order are in
   `docs/PHASE2.md`.

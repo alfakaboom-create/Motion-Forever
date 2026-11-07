@@ -75,17 +75,39 @@ function Compat.IsInOpenWorld()
 	return ok and not inInstance
 end
 
--- Returns the layer key read from an NPC unit, or nil. Players and pets
--- are skipped. Midnight can hide GUIDs as "secret" values, so this is
--- wrapped in pcall and returns nil if they're hidden.
-function Compat.GetUnitLayer(unit)
-	local ok, key = pcall(function()
-		if not UnitExists(unit) or UnitIsPlayer(unit) or UnitPlayerControlled(unit) then return nil end
-		local guid = UnitGUID(unit)
-		if guid == nil or (issecretvalue and issecretvalue(guid)) then return nil end
-		return ns.Layer.KeyFromGUID(guid)
+-- The zone-level map we're in. Towns and caves have their own small maps,
+-- so this walks up to the zone that contains them.
+function Compat.GetPlayerZoneMapID()
+	local ok, mapID = pcall(function()
+		local id = C_Map.GetBestMapForUnit("player")
+		for _ = 1, 5 do
+			local info = id and C_Map.GetMapInfo(id)
+			if not info or info.mapType <= Enum.UIMapType.Zone
+				or not info.parentMapID or info.parentMapID == 0 then
+				return id
+			end
+			id = info.parentMapID
+		end
+		return id
 	end)
-	if ok then return key end
+	if ok then return mapID end
+	return nil
+end
+
+-- Returns the layer key read from an NPC unit seen in zone zoneID, plus the
+-- NPC's GUID, or nil. Players and pets are skipped. Midnight can hide GUIDs
+-- as "secret" values, so this is wrapped in pcall and returns nil if
+-- they're hidden.
+function Compat.GetUnitLayer(unit, zoneID)
+	local ok, key, guid = pcall(function()
+		if not UnitExists(unit) or UnitIsPlayer(unit) or UnitPlayerControlled(unit) then return nil end
+		local id = UnitGUID(unit)
+		if id == nil or (issecretvalue and issecretvalue(id)) then return nil end
+		local layerKey = ns.Layer.KeyFromGUID(id, zoneID)
+		if layerKey then return layerKey, id end
+		return nil
+	end)
+	if ok then return key, guid end
 	return nil
 end
 
@@ -100,7 +122,7 @@ function Compat.DescribeUnitForLayer(unit)
 		local guid = UnitGUID(unit)
 		if guid == nil then return name .. ": the game gave no ID" end
 		if issecretvalue and issecretvalue(guid) then return name .. ": the game is hiding its ID" end
-		local key = ns.Layer.KeyFromGUID(guid)
+		local key = ns.Layer.KeyFromGUID(guid, Compat.GetPlayerZoneMapID())
 		return string.format("%s: ID %s -> layer %s", name, tostring(guid), key or "none found in this ID")
 	end)
 	if ok then return text end

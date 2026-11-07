@@ -105,8 +105,9 @@ end
 -- POS: mapID;x;y;class;level;caps;layer
 -- x and y are empty when the position is unknown (for example inside a
 -- dungeon), so others can still show which zone the player is in.
--- layer is a key like "0-1234" (see Layer.lua), empty when unknown. Older
--- copies of the addon don't send it.
+-- layer is a key like "1429:1234" (see Layer.lua), empty when unknown.
+-- Older copies don't send it, or send an old "0-1234" key, which is
+-- ignored because it can't be compared safely.
 ---------------------------------------------------------------------------
 function Protocol.EncodePos(p)
 	return Protocol.Encode(Protocol.MSG.POS,
@@ -128,7 +129,7 @@ function Protocol.DecodePos(fields)
 	if class == "" then class = nil end
 
 	local layer = fields[7]
-	if not (layer and layer:match("^%d+%-%d+$")) then layer = nil end
+	if not (layer and layer:match("^%d+:%d+$")) then layer = nil end
 
 	return {
 		layer = layer,

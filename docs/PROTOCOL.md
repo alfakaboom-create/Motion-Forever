@@ -34,12 +34,20 @@ Example: `1;POS;1429;4512;6230;MAGE;12;` is a level 12 mage in Elwynn Forest
 
 ### The layer field
 
-`layer` is `continent-zoneUID`, for example `0-1234`. It's read from the
-hidden ID of nearby NPCs (see `Layer.lua`). The numbers mean nothing on
-their own: two players are on the same layer when their keys match, and
-keys from different continents can't be compared. It's empty in instances,
-right after a loading screen or group change, and until the player has
-seen an NPC. A change of layer sends a `POS` within a few seconds.
+`layer` is `zoneMapID:zoneUID`, for example `1429:1234`. `zoneUID` is read
+from the hidden ID of nearby NPCs (see `Layer.lua`). It differs per zone
+as well as per layer, so it's tagged with the zone it was read in. The
+numbers mean nothing on their own: two players are on the same layer when
+their keys match, and keys from different zones can't be compared. Each
+player's key is the most common one among their last few NPC readings.
+
+It's empty in instances, right after a loading screen or group change,
+and until the player has seen an NPC. A change of layer sends a `POS`
+within a few seconds.
+
+Versions before this fix sent `continent-zoneUID` (for example `0-1234`).
+Those keys could wrongly say "different layer", so newer versions ignore
+them and show that player's layer as unknown.
 
 ### Timing
 

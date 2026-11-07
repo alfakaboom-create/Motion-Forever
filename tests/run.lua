@@ -137,15 +137,17 @@ test("POS round trip", function()
 end)
 
 test("POS carries the layer at the end", function()
-	local msg = P.EncodePos({ mapID = 1429, x = 0.5, y = 0.5, class = "MAGE", level = 12, caps = "", layer = "0-1234" })
-	eq(msg, "1;POS;1429;5000;5000;MAGE;12;;0-1234")
+	local msg = P.EncodePos({ mapID = 1429, x = 0.5, y = 0.5, class = "MAGE", level = 12, caps = "", layer = "1429:1234" })
+	eq(msg, "1;POS;1429;5000;5000;MAGE;12;;1429:1234")
 	local _, _, fields = P.Decode(msg)
-	eq(P.DecodePos(fields).layer, "0-1234")
+	eq(P.DecodePos(fields).layer, "1429:1234")
 end)
 
-test("POS ignores a malformed layer", function()
+test("POS ignores a malformed layer, and old-style keys", function()
 	local _, _, fields = P.Decode("1;POS;1429;5000;5000;MAGE;12;;garbage")
 	eq(P.DecodePos(fields).layer, nil)
+	_, _, fields = P.Decode("1;POS;1429;5000;5000;MAGE;12;;0-1234")
+	eq(P.DecodePos(fields).layer, nil, "old continent-based key")
 end)
 
 test("POS without coordinates (in a dungeon)", function()
@@ -286,8 +288,8 @@ test("sends after moving, but not faster than minInterval", function()
 end)
 
 test("a layer change counts as moving", function()
-	eq(Position.HasMoved({ mapID = 1, x = 0.5, y = 0.5, layer = "0-1" }, { mapID = 1, x = 0.5, y = 0.5, layer = "0-2" }), true)
-	eq(Position.HasMoved({ mapID = 1, layer = "0-1" }, { mapID = 1, layer = "0-1" }), false)
+	eq(Position.HasMoved({ mapID = 1, x = 0.5, y = 0.5, layer = "1:1" }, { mapID = 1, x = 0.5, y = 0.5, layer = "1:2" }), true)
+	eq(Position.HasMoved({ mapID = 1, layer = "1:1" }, { mapID = 1, layer = "1:1" }), false)
 end)
 
 test("tiny movements don't count", function()
@@ -311,26 +313,57 @@ end)
 ---------------------------------------------------------------------------
 print("Layer")
 
-test("reads the layer from an NPC's GUID", function()
-	eq(Layer.KeyFromGUID("Creature-0-4372-0-1234-299-0000123456"), "0-1234")
-	eq(Layer.KeyFromGUID("Vehicle-0-4372-1-5678-299-0000123456"), "1-5678")
+test("reads the layer from an NPC's GUID, tagged with the zone", function()
+	eq(Layer.KeyFromGUID("Creature-0-4372-0-1234-299-0000123456", 1429), "1429:1234")
+	eq(Layer.KeyFromGUID("Vehicle-0-4372-1-5678-299-0000123456", 1411), "1411:5678")
 end)
 
-test("ignores GUIDs without a layer", function()
-	eq(Layer.KeyFromGUID("Player-4372-0ABCDEF1"), nil)
-	eq(Layer.KeyFromGUID("Pet-0-4372-0-1234-299-0100000001"), nil)
-	eq(Layer.KeyFromGUID("Creature-0-4372-0-0-299-0000123456"), nil, "zoneUID 0")
-	eq(Layer.KeyFromGUID(nil), nil)
-	eq(Layer.KeyFromGUID("nonsense"), nil)
+test("ignores GUIDs without a layer, or with no zone", function()
+	eq(Layer.KeyFromGUID("Player-4372-0ABCDEF1", 1429), nil)
+	eq(Layer.KeyFromGUID("Pet-0-4372-0-1234-299-0100000001", 1429), nil)
+	eq(Layer.KeyFromGUID("Creature-0-4372-0-0-299-0000123456", 1429), nil, "zoneUID 0")
+	eq(Layer.KeyFromGUID("Creature-0-4372-0-1234-299-0000123456", nil), nil, "zone unknown")
+	eq(Layer.KeyFromGUID(nil, 1429), nil)
+	eq(Layer.KeyFromGUID("nonsense", 1429), nil)
 end)
 
-test("compares layers", function()
-	eq(Layer.Compare("0-1234", "0-1234"), "same")
-	eq(Layer.Compare("0-1234", "0-5678"), "different")
-	eq(Layer.Compare("0-1234", "1-1234"), "elsewhere", "different continents")
-	eq(Layer.Compare(nil, "0-1234"), "mine-unknown")
+test("compares layers only within the same zone", function()
+	eq(Layer.Compare("1429:1234", "1429:1234"), "same")
+	eq(Layer.Compare("1429:1234", "1429:5678"), "different")
+	eq(Layer.Compare("1429:1234", "1436:5678"), "elsewhere", "different zones can't be compared")
+	eq(Layer.Compare(nil, "1429:1234"), "mine-unknown")
 	eq(Layer.Compare(nil, nil), "mine-unknown", "ours is the one we can fix")
-	eq(Layer.Compare("0-1234", nil), "theirs-unknown", "older addon or unknown")
+	eq(Layer.Compare("1429:1234", nil), "theirs-unknown", "older addon or unknown")
+	eq(Layer.Compare("1429:1234", "0-1234"), "theirs-unknown", "old-style key")
+end)
+
+local function readings(...)
+	local list = {}
+	for i, key in ipairs({ ... }) do list[i] = { key = key, guid = "npc" .. i } end
+	return list
+end
+
+test("picks the most common reading, so one odd NPC doesn't flip it", function()
+	eq(Layer.Pick(readings("1429:7", "1429:7", "1429:9")), "1429:7")
+	eq(Layer.Pick(readings("1429:9", "1429:7")), "1429:7", "tie goes to the newest")
+	eq(Layer.Pick({}), nil)
+end)
+
+test("only readings from the newest zone count", function()
+	eq(Layer.Pick(readings("1429:7", "1429:7", "1429:7", "1436:3")), "1436:3")
+end)
+
+test("readings: one per NPC, newest kept", function()
+	local list = {}
+	Layer.AddReading(list, "1429:7", "a", 3)
+	Layer.AddReading(list, "1429:7", "a", 3)
+	eq(#list, 1, "same NPC counted once")
+	Layer.AddReading(list, "1429:7", "b", 3)
+	Layer.AddReading(list, "1429:9", "c", 3)
+	Layer.AddReading(list, "1429:9", "d", 3)
+	eq(#list, 3); eq(list[1].guid, "b", "oldest dropped")
+	eq(Layer.Pick(list), "1429:9")
+	eq(Layer.Summary(list), "1429:7 x1, 1429:9 x2")
 end)
 
 test("describes layers for players", function()
@@ -338,13 +371,14 @@ test("describes layers for players", function()
 	eq((Layer.Describe("different", true)), "Different")
 	eq((Layer.Describe("mine-unknown")), "Layer unknown: target any NPC")
 	eq((Layer.Describe("theirs-unknown")), "Their layer isn't known yet")
-	eq((Layer.Describe("elsewhere", true)), "Elsewhere")
+	eq((Layer.Describe("elsewhere")), "In another zone: can't compare")
+	eq((Layer.Describe("elsewhere", true)), "Other zone")
 	eq((Layer.Describe(nil)), "Layer unknown")
 end)
 
 test("layer from a POS reaches the roster", function()
-	Comm:OnMessage("MotionForever", "1;POS;1429;5000;2500;PRIEST;30;;0-42", "GUILD", "Ann-TestRealm")
-	eq(Roster:Get("Ann-TestRealm").layer, "0-42")
+	Comm:OnMessage("MotionForever", "1;POS;1429;5000;2500;PRIEST;30;;1429:42", "GUILD", "Ann-TestRealm")
+	eq(Roster:Get("Ann-TestRealm").layer, "1429:42")
 	Comm:OnMessage("MotionForever", "1;POS;1429;5000;2500;PRIEST;30;", "GUILD", "Ann-TestRealm")
 	eq(Roster:Get("Ann-TestRealm").layer, nil, "cleared when no longer sent")
 end)
@@ -395,10 +429,10 @@ end)
 
 test("rows compare each member's layer with ours", function()
 	local members = sampleAddonMembers()
-	members["Ann-TestRealm"].layer = "0-7"
-	members["Bob-TestRealm"].layer = "0-8"
+	members["Ann-TestRealm"].layer = "1429:7"
+	members["Bob-TestRealm"].layer = "1429:8"
 	local opts = listOpts(true)
-	opts.myLayer = "0-7"
+	opts.myLayer = "1429:7"
 	local rows = byName(GuildList.BuildRows(members, sampleGuild, opts))
 	eq(rows["Ann-TestRealm"].layer, "same")
 	eq(rows["Bob-TestRealm"].layer, "different")

@@ -60,6 +60,8 @@ local function printLayer()
 	ns.Layer:ScanAround()
 	ns.Print("Your layer: " .. (ns.Layer.mine or "unknown"))
 	print("  Open world: " .. (ns.Compat.IsInOpenWorld() and "yes" or "no (layers only work outside instances)"))
+	print("  Zone map: " .. tostring(ns.Compat.GetPlayerZoneMapID()))
+	print("  Recent NPC readings: " .. (#ns.Layer.readings > 0 and ns.Layer.Summary(ns.Layer.readings) or "none"))
 	print("  Target: " .. ns.Compat.DescribeUnitForLayer("target"))
 end
 
