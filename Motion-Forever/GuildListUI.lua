@@ -74,6 +74,7 @@ local function Refresh()
 		mapName = ns.Compat.GetMapName,
 		isDungeon = ns.Compat.IsDungeonMap,
 		myLayer = ns.Layer.mine,
+		now = GetTime(),
 	})
 	GuildList.SortRows(rows, ns.db.listSort, ns.db.listAscending)
 

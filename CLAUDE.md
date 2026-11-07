@@ -17,6 +17,12 @@ window. README.md covers features, layout and workflow for people.
   Fixed (merged into `main`, tested in game by the user): keys are now
   `zoneMapID:zoneUID`, only same-zone keys are compared, and the key is a
   vote over the last 9 NPCs. Old `0-1234` keys are ignored.
+- Layer sightings (branch `layer-sightings`, not yet tested in game): a
+  guild member we can see (nameplate, mouseover, target) counts as "seen",
+  which beats NPC readings, for 30 seconds after last seen. Nameplates are
+  rescanned every 5 seconds. Researched other options (party "sharding"
+  check, guild-wide map of which zone numbers belong together) are not
+  built yet.
 - Next: launch-day testing with `docs/LAUNCH-TESTING.md`, then phase 2
   step 2 (quest lists, `QREQ`/`QLIST`). The plan and build order are in
   `docs/PHASE2.md`.

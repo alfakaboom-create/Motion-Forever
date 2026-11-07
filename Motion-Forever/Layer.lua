@@ -15,6 +15,10 @@
 -- One odd NPC (for example across a zone border) shouldn't flip our layer,
 -- so we keep the last few readings and go with the most common one.
 --
+-- Simpler and certain: if we can see a guild member (their nameplate, or
+-- we mouse over or target them), they're on our layer, whatever the NPC
+-- readings say.
+--
 -- The functions at the top are pure (no game calls) so they can be tested.
 
 local _, ns = ...
@@ -57,6 +61,14 @@ function Layer.Compare(mine, theirs)
 	if not Layer.IsKey(theirs) then return "theirs-unknown" end
 	if zoneOf(mine) ~= zoneOf(theirs) then return "elsewhere" end
 	return mine == theirs and "same" or "different"
+end
+
+-- The layer state for a guild member's roster entry. Seeing them in the
+-- world is proof they're on our layer, so it wins over NPC readings.
+-- Otherwise it's Compare() on the two keys.
+function Layer.StateFor(entry, mine, now)
+	if ns.Roster.IsSighted(entry, now) then return "seen" end
+	return Layer.Compare(mine, entry.layer)
 end
 
 -- Adds a reading. The same NPC only counts once, and only the newest
@@ -112,7 +124,9 @@ local GREY = { 0.6, 0.6, 0.6 }
 
 -- Text and color for a Compare() result. `short` is for the guild list.
 function Layer.Describe(state, short)
-	if state == "same" then
+	if state == "seen" then
+		return short and "Same" or "Same layer as you (in sight)", unpack(GREEN)
+	elseif state == "same" then
 		return short and "Same" or "Same layer as you", unpack(GREEN)
 	elseif state == "different" then
 		return short and "Different" or "Different layer", unpack(ORANGE)
@@ -136,8 +150,17 @@ function Layer:Set(key)
 	ns.Fire("LAYER_CHANGED", key)
 end
 
+-- Looks at one unit: a guild member we can see is on our layer; an NPC
+-- gives a layer reading.
 function Layer:Observe(unit)
 	if not ns.Compat.IsInOpenWorld() then return end
+
+	local playerName = ns.Compat.GetUnitPlayerName(unit)
+	if playerName then
+		if ns.Roster:Get(playerName) then ns.Roster:MarkSighted(playerName, GetTime()) end
+		return
+	end
+
 	local key, guid = ns.Compat.GetUnitLayer(unit, ns.Compat.GetPlayerZoneMapID())
 	if not key then return end
 	Layer.AddReading(self.readings, key, guid, Layer.MAX_READINGS)
@@ -162,16 +185,16 @@ end
 -- readings, then look again at what's around us a moment later.
 function Layer:Reset()
 	self.readings = {}
+	ns.Roster:ClearSightings()
 	self:Set(nil)
 	C_Timer.After(3, function() Layer:ScanAround() end)
 end
 
--- While our layer is unknown, keep looking every few seconds, so it's found
--- even if the NPC was targeted before a loading screen finished.
+-- Look around every few seconds: finds our layer even if the NPC was
+-- targeted before a loading screen finished, and keeps guild members who
+-- are still in view marked as seen.
 ns.On("READY", function()
-	C_Timer.NewTicker(5, function()
-		if not Layer.mine then Layer:ScanAround() end
-	end)
+	C_Timer.NewTicker(5, function() Layer:ScanAround() end)
 end)
 
 ns.RegisterGameEvent("PLAYER_TARGET_CHANGED", function() Layer:Observe("target") end)

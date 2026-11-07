@@ -111,6 +111,21 @@ function Compat.GetUnitLayer(unit, zoneID)
 	return nil
 end
 
+-- If unit is a player, returns their "Name-Realm" (the same form the addon
+-- uses for guild members), otherwise nil.
+function Compat.GetUnitPlayerName(unit)
+	local ok, fullName = pcall(function()
+		if not UnitExists(unit) or not UnitIsPlayer(unit) then return nil end
+		local name, realm = UnitFullName(unit)
+		if not name or (issecretvalue and issecretvalue(name)) then return nil end
+		if not realm or realm == "" then realm = GetNormalizedRealmName() end
+		if not realm then return nil end
+		return name .. "-" .. realm
+	end)
+	if ok then return fullName end
+	return nil
+end
+
 -- For /mforever layer: explains what the game tells us about a unit, so
 -- we can see why no layer was found. Returns a line of text.
 function Compat.DescribeUnitForLayer(unit)

@@ -383,6 +383,50 @@ test("layer from a POS reaches the roster", function()
 	eq(Roster:Get("Ann-TestRealm").layer, nil, "cleared when no longer sent")
 end)
 
+test("seeing a guild member counts for a while, then expires", function()
+	local entry = Roster:Update("Ann-TestRealm", { mapID = 1429, layer = "1429:1" }, 100)
+	eq(Roster.IsSighted(entry, 100), false)
+	Roster:MarkSighted("Ann-TestRealm", 100)
+	eq(Roster.IsSighted(entry, 100 + Roster.SIGHT_WINDOW), true)
+	eq(Roster.IsSighted(entry, 101 + Roster.SIGHT_WINDOW), false)
+	Roster:MarkSighted("Nobody-TestRealm", 100) -- not in the roster: ignored
+	eq(Roster:Get("Nobody-TestRealm"), nil)
+end)
+
+test("a sighting only fires an update when it's new", function()
+	Roster:Update("Ann-TestRealm", { mapID = 1429 }, 100)
+	local count = 0
+	ns.On("ROSTER_CHANGED", function() count = count + 1 end)
+	Roster:MarkSighted("Ann-TestRealm", 100)
+	Roster:MarkSighted("Ann-TestRealm", 105)
+	eq(count, 1, "repeat sighting is quiet")
+	Roster:MarkSighted("Ann-TestRealm", 200)
+	eq(count, 2, "sighting after it expired is new again")
+	events.ROSTER_CHANGED = nil
+end)
+
+test("a sighting is forgotten when their layer changes or ours resets", function()
+	Roster:Update("Ann-TestRealm", { mapID = 1429, layer = "1429:1" }, 100)
+	Roster:MarkSighted("Ann-TestRealm", 100)
+	Roster:Update("Ann-TestRealm", { mapID = 1429, layer = "1429:1" }, 101)
+	eq(Roster:Get("Ann-TestRealm").sightedAt, 100, "same layer keeps it")
+	Roster:Update("Ann-TestRealm", { mapID = 1429, layer = "1429:2" }, 102)
+	eq(Roster:Get("Ann-TestRealm").sightedAt, nil, "new layer drops it")
+	Roster:MarkSighted("Ann-TestRealm", 103)
+	Roster:ClearSightings()
+	eq(Roster:Get("Ann-TestRealm").sightedAt, nil)
+end)
+
+test("seeing someone beats the NPC readings", function()
+	local entry = { layer = "1429:2", sightedAt = 100 }
+	eq(Layer.StateFor(entry, "1429:1", 110), "seen", "in sight wins over different")
+	eq(Layer.StateFor(entry, nil, 110), "seen", "works even if our layer is unknown")
+	eq(Layer.StateFor(entry, "1429:1", 200), "different", "after it expires, readings decide")
+	eq(Layer.StateFor({ layer = "1429:1" }, "1429:1", 110), "same")
+	eq((Layer.Describe("seen")), "Same layer as you (in sight)")
+	eq((Layer.Describe("seen", true)), "Same")
+end)
+
 ---------------------------------------------------------------------------
 -- Guild list
 ---------------------------------------------------------------------------
@@ -437,6 +481,16 @@ test("rows compare each member's layer with ours", function()
 	eq(rows["Ann-TestRealm"].layer, "same")
 	eq(rows["Bob-TestRealm"].layer, "different")
 	eq(rows["Dee-TestRealm"].layer, nil, "no addon")
+end)
+
+test("rows show guild members in sight as on our layer", function()
+	local members = sampleAddonMembers()
+	members["Bob-TestRealm"].layer = "1429:8"
+	members["Bob-TestRealm"].sightedAt = 100
+	local opts = listOpts(true)
+	opts.myLayer = "1429:7"
+	opts.now = 110
+	eq(byName(GuildList.BuildRows(members, sampleGuild, opts))["Bob-TestRealm"].layer, "seen")
 end)
 
 test("leaves yourself out", function()

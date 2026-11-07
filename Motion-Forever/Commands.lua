@@ -35,7 +35,7 @@ local function printList()
 		else
 			where = zone .. " (no exact position)"
 		end
-		local layer = ns.Layer.Describe(ns.Layer.Compare(ns.Layer.mine, entry.layer))
+		local layer = ns.Layer.Describe(ns.Layer.StateFor(entry, ns.Layer.mine, now))
 		print(string.format("  %s - %s, %s, %ds ago", ns.ShortName(name), where, layer,
 			math.floor(now - entry.lastSeen)))
 	end

@@ -12,6 +12,7 @@ ns.Roster = Roster
 -- An entry looks like:
 -- {
 --   name = "Name-Realm", mapID, x, y, class, level, caps, layer, lastSeen,
+--   sightedAt = nil, -- when we last saw them in the world (so same layer)
 --   quests = nil,  -- phase 2: shareable quest IDs, filled from QLIST
 -- }
 
@@ -34,12 +35,43 @@ function Roster:Update(name, data, now)
 	entry.class = data.class or entry.class
 	entry.level = data.level or entry.level
 	entry.caps = data.caps or ""
+	-- If their layer changed, they may have moved, so an old sighting no
+	-- longer proves anything. It's renewed if they're still in view.
+	if data.layer ~= entry.layer then entry.sightedAt = nil end
 	entry.layer = data.layer -- nil when unknown, or from an older addon
 	entry.lastSeen = now
 	-- entry.quests is left alone on purpose: it's managed by phase 2.
 
 	fire("ROSTER_CHANGED", name, kind)
 	return entry
+end
+
+-- A sighting counts for this long after we last saw them. Nameplates are
+-- rechecked every 5 seconds, so someone in view stays sighted.
+Roster.SIGHT_WINDOW = 30
+
+function Roster.IsSighted(entry, now)
+	return entry.sightedAt ~= nil and now - entry.sightedAt <= Roster.SIGHT_WINDOW
+end
+
+-- We can see this guild member in the world. Fires ROSTER_CHANGED only
+-- when they weren't already marked, since this happens every few seconds.
+function Roster:MarkSighted(name, now)
+	local entry = self.members[name]
+	if not entry then return end
+	local isNew = not Roster.IsSighted(entry, now)
+	entry.sightedAt = now
+	if isNew then fire("ROSTER_CHANGED", name, "updated") end
+end
+
+-- Forget all sightings, for example after we change layer ourselves.
+function Roster:ClearSightings()
+	for name, entry in pairs(self.members) do
+		if entry.sightedAt then
+			entry.sightedAt = nil
+			fire("ROSTER_CHANGED", name, "updated")
+		end
+	end
 end
 
 function Roster:Remove(name)

@@ -18,10 +18,11 @@ ns.GuildList = GuildList
 --   mapName    function(mapID) -> zone name
 --   isDungeon  function(mapID) -> true if the map is a dungeon or raid
 --   myLayer    our layer key, or nil if unknown
+--   now        the current time, to tell if a sighting still counts
 --
 -- A row looks like:
 -- { name, class, level, zone, hasAddon, hasPosition, inDungeon,
---   layer,          -- "same", "different", why it is unknown, or nil without the addon (see Layer.Compare)
+--   layer,          -- "seen", "same", "different", why it is unknown, or nil without the addon (see Layer.StateFor)
 --   quests = nil }  -- phase 2: quest count, filled in from QLIST
 function GuildList.BuildRows(addonMembers, guildMembers, opts)
 	local rows, byName = {}, {}
@@ -35,7 +36,7 @@ function GuildList.BuildRows(addonMembers, guildMembers, opts)
 				hasAddon = true,
 				hasPosition = entry.x ~= nil,
 				inDungeon = false,
-				layer = ns.Layer.Compare(opts.myLayer, entry.layer),
+				layer = ns.Layer.StateFor(entry, opts.myLayer, opts.now or 0),
 			}
 			if entry.mapID then
 				row.zone = opts.mapName(entry.mapID)

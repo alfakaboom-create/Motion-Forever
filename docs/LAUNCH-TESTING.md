@@ -122,6 +122,9 @@ Both players need the same version of the addon for these.
 | H7 | Player 2 /reloads and doesn't target anything. Player 1 hovers Player 2's dot, keeps the mouse there, and Player 2 then targets an NPC | Within a few seconds the tooltip changes from "Their layer isn't known yet" to a layer result, without moving the mouse |
 | H8 | Same layer, then Player 2 walks into the next zone and targets an NPC there | "In another zone" while apart; "Same layer as you" again once Player 2 is back and has seen an NPC |
 | H9 | Stand near a zone border with nameplates on | The result doesn't flip back and forth |
+| H10 | Turn on friendly player nameplates. Stand near Player 2, without targeting any NPCs | Within about 5 seconds: "Same layer as you (in sight)" / "Same" |
+| H11 | Nameplates off. Mouse over Player 2 in the world, then hover their map dot | "Same layer as you (in sight)" for about 30 seconds |
+| H12 | Player 2 walks out of sight (or joins a group led by someone on another layer) | Within about 30 seconds, it goes back to what the NPC readings say |
 
 ---
 
